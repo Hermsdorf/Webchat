@@ -1,0 +1,111 @@
+/* ===== CONFIGURAÇÕES GLOBAIS (permanecem iguais) ===== */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: sans-serif;
+    background-color: #f4f4f4;
+}
+
+/* ===== LAYOUT PRINCIPAL COM CSS GRID (A CORREÇÃO) ===== */
+body {
+    display: grid;
+    /* Define 2 colunas: uma fixa de 240px para a sidebar e o resto (1fr) para o conteúdo */
+    grid-template-columns: 240px 1fr;
+}
+
+.sidebar {
+    /* Não precisamos mais de 'grid-area', pois a ordem no HTML e o grid-template-columns já o posicionam */
+    padding: 20px;
+    background-color: #fff;
+    border-right: 1px solid #ddd; /* Trocado de border-left para border-right */
+}
+
+.content-wrapper {
+    /* Este novo container será um Flexbox para empilhar header, main e footer */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Garante que o rodapé seja empurrado para o fundo */
+}
+
+/* ===== POSICIONAMENTO DOS ELEMENTOS ===== */
+header {
+    /* O grid interno do header permanece EXATAMENTE O MESMO, pois já está perfeito */
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 0 20px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #ddd;
+    /* Removemos o grid-area, pois não é mais necessário */
+}
+/* Estilos do .logo-container, #boas-vindas, .user-actions permanecem os mesmos */
+.logo-container {
+    justify-self: start; 
+    font-weight: bold;
+}
+#boas-vindas {
+    justify-self: center;
+    font-size: 1.5em;
+    margin: 0;
+}
+.user-actions {
+    justify-self: end;
+}
+
+
+main.chat-container {
+    /* Dizemos ao main para "crescer" e ocupar todo o espaço vertical disponível,
+       empurrando o footer para o fundo da tela. */
+    flex-grow: 1;
+    
+    /* Para centralizar o chat DENTRO da área de conteúdo, usamos flexbox de novo! */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+footer {
+    text-align: center;
+    padding: 15px 0;
+    color: #666;
+    background-color: #fff;
+    border-top: 1px solid #ddd;
+}
+
+
+/* ===== ESTILOS DOS ELEMENTOS DO CHAT (permanecem os mesmos) ===== */
+/* ... todas as regras de #chat_out, #chat_in, #sendbt continuam aqui sem alteração ... */
+#chat_out,
+#chat_in {
+    width: 450px;
+    resize: none;
+    border: 1px solid #ccc;
+    padding: 10px;
+    box-sizing: border-box;
+    display: block;
+    border-radius: 5px;
+}
+#chat_out {
+    height: 300px;
+}
+#chat_in {
+    height: 80px;
+    margin-top: 10px;
+}
+#sendbt {
+    display: block;
+    margin-top: 10px;
+    margin-left: auto;
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#sendbt:hover {
+    background-color: #0056b3;
+}

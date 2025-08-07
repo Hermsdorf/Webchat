@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chat</title>
+    <link rel="stylesheet" href="css/lobby.css">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <h2 id="sidebar-title">Bem-vindo</h2>
+        <section class="user-info">
+            <p id="user-nickname">Nickname: <span id="nickname-display"></span></p>
+            <p id="user-id">ID: <span id="user-id-display"></span></p>
+        </section>
+    </aside>
+
+    <div class="content-wrapper">
+
+        <header>
+            <div class="logo-container">
+                <span></span>
+            </div>
+            <h1 id="boas-vindas">WhatZap 2</h1>
+            <div class="user-actions">
+                <a href="home.html" id="logout">Home</a>
+            </div>
+        </header>
+
+        <main class="chat-hall">
+            <header>
+                <h1 id="titulo-principal">Lobby</h1>
+            </header>
+            <section id="room-opt">
+                
+            </section>
+            <section class="rooms-section">
+                <ul id="rooms-list">
+                    <!-- Lista de salas será preenchida dinamicamente -->
+                </ul>
+            
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Meu Super Chat. Todos os direitos reservados.</p>
+        </footer>
+
+    </div> <script src="js/lobby_script.js"></script>
+</body>
+</html>

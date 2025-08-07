@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="css/home.css">
+</head>
+
+<body>
+
+<main class="home-container">
+
+    <h1 id="titulo-principal">WhatZap 2</h1>
+    <p>Para começar digite um apelido:</p>
+
+    <div class="input-wrapper">
+        <button id="emoji-btn" type="button"></button>
+        <input type="text" id="nome" placeholder="Nickname" autocomplete="off">
+        
+        <emoji-picker class="light"></emoji-picker>
+    </div>
+
+    <button id="start-chat">Iniciar Chat</button>
+
+</main>
+
+</body>
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+<script src="js/home_script.js"></script>
+
+</html>

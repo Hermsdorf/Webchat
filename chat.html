@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chat</title>
+    <link rel="stylesheet" href="css/chat.css">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <h2 id="sidebar-title">Bem-vindo</h2>
+        <section class="user-info">
+            <p id="user-nickname">Nickname: <span id="nickname-display"></span></p>
+            <p id="user-id">ID: <span id="user-id-display"></span></p>
+        </section>
+        <section class="chat-options">
+            <button id="quit-chat">Sair da Sala</button>
+        </section>
+    </aside>
+
+    <div class="content-wrapper">
+
+        <header>
+            <div class="logo-container">
+                <span></span>
+            </div>
+            <h1 id="boas-vindas">WhatZap 2</h1>
+            <div class="user-actions">
+                <a href="home.html" id="logout">Home</a>
+            </div>
+        </header>
+
+        <main class="chat-container">
+            <section class="display-section">
+                <textarea id="chat_out" readonly></textarea>
+            </section>
+            <section class="input-section">
+                <textarea id="chat_in" placeholder="Digite sua mensagem..."></textarea>
+                <button id="sendbt" type="button">Enviar</button>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Meu Super Chat. Todos os direitos reservados.</p>
+        </footer>
+
+    </div> <script src="js/chat_script.js"></script>
+</body>
+</html>
