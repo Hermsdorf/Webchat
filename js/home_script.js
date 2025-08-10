@@ -43,6 +43,15 @@ document.addEventListener('click', (event) => {
 // LÓGICA EXISTENTE: Iniciar o Chat (Mantida exatamente como você escreveu)
 // =========================================================================
 
+nome_input.addEventListener("keydown", function(event) 
+{
+    if (event.key === "Enter") 
+    {
+        event.preventDefault();
+        s_button.click();
+    }
+});
+
 s_button.addEventListener("click", function(event) {
     // A sua lógica original é mantida 100% intacta.
     // O preventDefault() é uma boa prática caso o botão esteja dentro de um form ou <a>.

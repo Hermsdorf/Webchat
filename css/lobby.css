@@ -1,4 +1,4 @@
-/* ===== CONFIGURAÇÕES GLOBAIS (permanecem iguais) ===== */
+/* ===== ESTILOS GLOBAIS E DE RESET ===== */
 body, html {
     margin: 0;
     padding: 0;
@@ -7,38 +7,57 @@ body, html {
     background-color: #f4f4f4;
 }
 
+/* ===== LAYOUT PRINCIPAL (Sidebar + Conteúdo) ===== */
 body {
     display: grid;
-    /* Define 2 colunas: uma fixa de 240px para a sidebar e o resto (1fr) para o conteúdo */
     grid-template-columns: 240px 1fr;
 }
 
 .sidebar {
-    /* Não precisamos mais de 'grid-area', pois a ordem no HTML e o grid-template-columns já o posicionam */
     padding: 20px;
     background-color: #fff;
-    border-right: 1px solid #ddd; /* Trocado de border-left para border-right */
+    border-right: 1px solid #ddd;
+    /* Adicionado para garantir que a sidebar não cause scroll desnecessário */
+    height: 100vh;
+    box-sizing: border-box;
 }
 
 .content-wrapper {
-    /* Este novo container será um Flexbox para empilhar header, main e footer */
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Garante que o rodapé seja empurrado para o fundo */
+    /* Removemos o min-height daqui, pois o body já controla o layout principal */
 }
 
-/* ===== POSICIONAMENTO DOS ELEMENTOS ===== */
+/* ================================================================
+    <<< MUDANÇA 1: O MAIN DEVE CRESCER >>>
+    Dizemos para o <main> ocupar todo o espaço vertical livre
+    dentro do .content-wrapper, empurrando o footer para baixo.
+================================================================
+*/
+main.chat-hall {
+    flex: 1; /* Atalho para flex-grow: 1; */
+
+    /* MUDANÇA 2: Transformamos o main em um flex container também */
+    display: flex;
+    flex-direction: column;
+    padding: 0; /* Adicionado um padding geral */
+}
+
+main > header > h1{
+    padding: 10px;
+    margin: 1px;
+}
+
+/* ================================================================ */
+
 header {
-    /* O grid interno do header permanece EXATAMENTE O MESMO, pois já está perfeito */
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    padding: 0 20px;
+    padding: 10px 10px;
     background-color: #ffffff;
     border-bottom: 1px solid #ddd;
-    /* Removemos o grid-area, pois não é mais necessário */
 }
-/* Estilos do .logo-container, #boas-vindas, .user-actions permanecem os mesmos */
 .logo-container {
     justify-self: start; 
     font-weight: bold;
@@ -52,17 +71,103 @@ header {
     justify-self: end;
 }
 
-main{
-    display: grid;
-    grid-template-rows: 1fr 1fr auto;
-    grid-template-columns: 1fr;
-
+/* ===== LAYOUT INTERNO DO MAIN ===== */
+main.chat-hall > header { /* Estilo para o header DENTRO do main */
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    margin-bottom: 20px;
 }
 
+#room-opt {
+    margin-bottom: 20px; 
+}
+
+#room-opt form {
+    display: grid;
+
+    /* A estrutura de 5 colunas e 3 linhas que você tinha antes */
+    grid-template-columns: 0.5fr 1fr 1fr 0.5fr 1fr;
+    grid-template-rows: 0.5fr 0.5fr 0.5fr; /* Usando 'auto' na linha do meio para a altura correta */
+
+    /* O seu "desenho" que cria o espaço vazio à esquerda */
+   grid-template-areas:
+        ".     info   info   info   ."
+        ".     input  input  button . "
+        ".     .      .      .      .";
+    
+    column-gap: 10px;
+    row-gap: 5px; /* Adicionado um pequeno espaço entre as linhas */
+    align-items: center;
+}
+
+#room-name {
+    /* Atribui o input à sua área no grid, removendo o flex-grow */
+    grid-area: input;
+    
+    /* Estilos visuais */
+    width: 100%; 
+    box-sizing: border-box; 
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#create-room {
+    /* Atribui o botão à sua área no grid */
+    grid-area: button;
+
+    /* Estilos visuais */
+    padding: 8px 16px; 
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#rooms-info {
+    grid-area: info; /* Posiciona o container inteiro na área "info" */
+    justify-self: start; /* Alinha o container à esquerda da sua área */
+    
+    /* Usamos flex para alinhar "Salas:" e "0" um ao lado do outro */
+    display: flex;
+    gap: 8px; /* Controla o espaço EXATO entre "Salas:" e "0" */
+}
+
+/* Podemos manter o estilo de negrito para o label */
+#rooms-label {
+    font-weight: bold;
+}
+
+/* ================================================================
+    <<< MUDANÇA 3: A SEÇÃO DE SALAS DEVE CRESCER >>>
+    Dizemos para a lista de salas ocupar todo o espaço vertical
+    que o <main> deixou disponível.
+================================================================
+*/
+.rooms-section {
+    flex-grow: 1;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    overflow-y: auto; /* Adiciona scroll SÓ AQUI se a lista de salas for grande */
+}
+/* ================================================================ */
+
+#rooms-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+
 footer {
-    text-align: center;;
+    text-align: center;
     padding: 15px 0;
     color: #666;
     background-color: #fff;
     border-top: 1px solid #ddd;
+    /* O footer não precisa de mais nada, o flexbox do wrapper já o posiciona */
 }
