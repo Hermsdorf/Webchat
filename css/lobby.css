@@ -171,3 +171,73 @@ footer {
     border-top: 1px solid #ddd;
     /* O footer não precisa de mais nada, o flexbox do wrapper já o posiciona */
 }
+
+/* ================================================================
+    ESTILOS PARA A SEÇÃO DE SALAS (GRID RESPONSIVO)
+================================================================ */
+
+/* Removemos o estilo padrão da lista para que ela se comporte como um container puro */
+#rooms-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    /* A MÁGICA DO GRID RESPONSIVO ACONTECE AQUI */
+    display: grid;
+    /* Tenta encaixar o máximo de colunas com no mínimo 220px.
+       Se não couber, quebra a linha. Se sobrar espaço, as colunas crescem. */
+    grid-template-columns: repeat(auto-fit, 250px); /* Ou o tamanho que preferir, ex: 280px */
+    
+    gap: 16px; /* Espaço entre os cards */
+}
+
+/* Estilo de cada card <li> */
+.room-item {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+    /* Usamos flexbox para organizar o conteúdo DENTRO do card */
+    display: flex;
+    flex-direction: column; /* Empilha os itens verticalmente */
+    justify-content: space-between; /* Empurra o botão para o fundo */
+    min-height: 150px; /* Altura mínima para o card */
+}
+
+/* Container para as informações no topo do card */
+.room-info {
+    /* Não precisa de muito, o flexbox do pai já o posiciona */
+}
+
+.room-name-display {
+    display: block; /* Faz ocupar uma linha inteira */
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-bottom: 8px;
+}
+
+.room-people-count {
+    display: block;
+    color: #666;
+    font-size: 0.9em;
+}
+
+/* Botão de entrar dentro do card */
+.join-room-btn {
+    width: 100%; /* Faz o botão ocupar toda a largura do card */
+    padding: 10px;
+    margin-top: 16px; /* Espaço entre as informações e o botão */
+    border: none;
+    background-color: #28a745; /* Um verde para "entrar" */
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.join-room-btn:hover {
+    background-color: #218838; /* Verde mais escuro no hover */
+}

@@ -14,42 +14,52 @@ createRoom.addEventListener("click", function(event) {
         return;
     }
 
-    // Cria o item <li> principal
+    // Cria o <li>, que será nosso "card" retangular
     const newRoomItem = document.createElement("li");
     newRoomItem.classList.add("room-item");
 
-    // Cria e anexa o <span> para o nome
+    // ================================================================
+    // <<< MUDANÇA PRINCIPAL AQUI >>>
+    // Criamos uma <div> para agrupar as informações da sala (nome e pessoas)
+    // ================================================================
+    const roomInfoDiv = document.createElement("div");
+    roomInfoDiv.classList.add("room-info");
+
     const nameSpan = document.createElement('span');
     nameSpan.textContent = roomName;
     nameSpan.classList.add('room-name-display');
-    newRoomItem.appendChild(nameSpan);
 
-    // Cria e anexa o <span> para o contador
     const countSpan = document.createElement('span');
-    countSpan.textContent = '1/10'; // Valor inicial
-    countSpan.classList.add('room-count-display');
-    newRoomItem.appendChild(countSpan);
+    // Ajustamos o texto para corresponder ao seu desenho
+    countSpan.textContent = 'Pessoas: 1/10'; 
+    countSpan.classList.add('room-people-count');
+
+    // Adicionamos o nome e o contador DENTRO da nova div
+    roomInfoDiv.appendChild(nameSpan);
+    roomInfoDiv.appendChild(countSpan);
 
     // Cria o botão "Entrar"
     const joinButton = document.createElement("button");
-    joinButton.textContent = "Entrar";
+    joinButton.textContent = "ENTRAR";
     joinButton.classList.add("join-room-btn");
 
     joinButton.addEventListener("click", function() {
-        // 1. Salva o nome da sala específica deste botão no sessionStorage
-        // A função "lembra" qual era o valor de 'roomName' quando ela foi criada!
         sessionStorage.setItem('nomeSala', roomName);
-
-        // 2. Redireciona o usuário para a página de chat
         window.location.href = 'chat.html';
     });
 
+    // ================================================================
+    // Anexamos as duas partes principais ao card <li>:
+    // 1. A div com as informações
+    // 2. O botão de entrar
+    // ================================================================
+    newRoomItem.appendChild(roomInfoDiv);
     newRoomItem.appendChild(joinButton);
 
-    // Finalmente, anexa o <li> completo (com nome, contador E botão) à lista <ul>
+    // Anexa o card completo à lista <ul>
     roomList.appendChild(newRoomItem);
 
-    // Atualiza o contador de salas e limpa o input
+    // Atualiza o contador e limpa o input
     roomCountInput.textContent = roomList.children.length;
     roomNameInput.value = "";
     roomNameInput.focus();
