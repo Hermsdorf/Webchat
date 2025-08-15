@@ -33,19 +33,29 @@
                 <h1 id="titulo-principal">Lobby</h1>
             </header>
             <section id="room-opt">
-                
+                <form action="">
+                    <div id="rooms-info">
+                        <span id="rooms-label">Salas:</span>
+                        <span id="rooms-count">0</span>
+                    </div>
+
+                    <input type="text" id="room-name" placeholder="Nome da sala">
+                    <button id="create-room">Criar Sala</button>
+                </form>
             </section>
             <section class="rooms-section">
                 <ul id="rooms-list">
                     <!-- Lista de salas será preenchida dinamicamente -->
                 </ul>
-            
+
         </main>
 
         <footer>
             <p>&copy; 2025 Meu Super Chat. Todos os direitos reservados.</p>
         </footer>
 
-    </div> <script src="js/lobby_script.js"></script>
+    </div>
+    <script src="js/lobby_script.js"></script>
 </body>
+
 </html>

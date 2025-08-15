@@ -1,0 +1,243 @@
+/* ===== ESTILOS GLOBAIS E DE RESET ===== */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: sans-serif;
+    background-color: #f4f4f4;
+}
+
+/* ===== LAYOUT PRINCIPAL (Sidebar + Conteúdo) ===== */
+body {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+}
+
+.sidebar {
+    padding: 20px;
+    background-color: #fff;
+    border-right: 1px solid #ddd;
+    /* Adicionado para garantir que a sidebar não cause scroll desnecessário */
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    /* Removemos o min-height daqui, pois o body já controla o layout principal */
+}
+
+/* ================================================================
+    <<< MUDANÇA 1: O MAIN DEVE CRESCER >>>
+    Dizemos para o <main> ocupar todo o espaço vertical livre
+    dentro do .content-wrapper, empurrando o footer para baixo.
+================================================================
+*/
+main.chat-hall {
+    flex: 1; /* Atalho para flex-grow: 1; */
+
+    /* MUDANÇA 2: Transformamos o main em um flex container também */
+    display: flex;
+    flex-direction: column;
+    padding: 0; /* Adicionado um padding geral */
+}
+
+main > header > h1{
+    padding: 10px;
+    margin: 1px;
+}
+
+/* ================================================================ */
+
+header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 10px 10px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #ddd;
+}
+.logo-container {
+    justify-self: start; 
+    font-weight: bold;
+}
+#boas-vindas {
+    justify-self: center;
+    font-size: 1.5em;
+    margin: 0;
+}
+.user-actions {
+    justify-self: end;
+}
+
+/* ===== LAYOUT INTERNO DO MAIN ===== */
+main.chat-hall > header { /* Estilo para o header DENTRO do main */
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    margin-bottom: 20px;
+}
+
+#room-opt {
+    margin-bottom: 20px; 
+}
+
+#room-opt form {
+    display: grid;
+
+    /* A estrutura de 5 colunas e 3 linhas que você tinha antes */
+    grid-template-columns: 0.5fr 1fr 1fr 0.5fr 1fr;
+    grid-template-rows: 0.5fr 0.5fr 0.5fr; /* Usando 'auto' na linha do meio para a altura correta */
+
+    /* O seu "desenho" que cria o espaço vazio à esquerda */
+   grid-template-areas:
+        ".     info   info   info   ."
+        ".     input  input  button . "
+        ".     .      .      .      .";
+    
+    column-gap: 10px;
+    row-gap: 5px; /* Adicionado um pequeno espaço entre as linhas */
+    align-items: center;
+}
+
+#room-name {
+    /* Atribui o input à sua área no grid, removendo o flex-grow */
+    grid-area: input;
+    
+    /* Estilos visuais */
+    width: 100%; 
+    box-sizing: border-box; 
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#create-room {
+    /* Atribui o botão à sua área no grid */
+    grid-area: button;
+
+    /* Estilos visuais */
+    padding: 8px 16px; 
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#rooms-info {
+    grid-area: info; /* Posiciona o container inteiro na área "info" */
+    justify-self: start; /* Alinha o container à esquerda da sua área */
+    
+    /* Usamos flex para alinhar "Salas:" e "0" um ao lado do outro */
+    display: flex;
+    gap: 8px; /* Controla o espaço EXATO entre "Salas:" e "0" */
+}
+
+/* Podemos manter o estilo de negrito para o label */
+#rooms-label {
+    font-weight: bold;
+}
+
+/* ================================================================
+    <<< MUDANÇA 3: A SEÇÃO DE SALAS DEVE CRESCER >>>
+    Dizemos para a lista de salas ocupar todo o espaço vertical
+    que o <main> deixou disponível.
+================================================================
+*/
+.rooms-section {
+    flex-grow: 1;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    overflow-y: auto; /* Adiciona scroll SÓ AQUI se a lista de salas for grande */
+}
+/* ================================================================ */
+
+#rooms-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+
+footer {
+    text-align: center;
+    padding: 15px 0;
+    color: #666;
+    background-color: #fff;
+    border-top: 1px solid #ddd;
+    /* O footer não precisa de mais nada, o flexbox do wrapper já o posiciona */
+}
+
+/* ================================================================
+    ESTILOS PARA A SEÇÃO DE SALAS (GRID RESPONSIVO)
+================================================================ */
+
+/* Removemos o estilo padrão da lista para que ela se comporte como um container puro */
+#rooms-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    /* A MÁGICA DO GRID RESPONSIVO ACONTECE AQUI */
+    display: grid;
+    /* Tenta encaixar o máximo de colunas com no mínimo 220px.
+       Se não couber, quebra a linha. Se sobrar espaço, as colunas crescem. */
+    grid-template-columns: repeat(auto-fit, 250px); /* Ou o tamanho que preferir, ex: 280px */
+    
+    gap: 16px; /* Espaço entre os cards */
+}
+
+/* Estilo de cada card <li> */
+.room-item {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+    /* Usamos flexbox para organizar o conteúdo DENTRO do card */
+    display: flex;
+    flex-direction: column; /* Empilha os itens verticalmente */
+    justify-content: space-between; /* Empurra o botão para o fundo */
+    min-height: 150px; /* Altura mínima para o card */
+}
+
+/* Container para as informações no topo do card */
+.room-info {
+    /* Não precisa de muito, o flexbox do pai já o posiciona */
+}
+
+.room-name-display {
+    display: block; /* Faz ocupar uma linha inteira */
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-bottom: 8px;
+}
+
+.room-people-count {
+    display: block;
+    color: #666;
+    font-size: 0.9em;
+}
+
+/* Botão de entrar dentro do card */
+.join-room-btn {
+    width: 100%; /* Faz o botão ocupar toda a largura do card */
+    padding: 10px;
+    margin-top: 16px; /* Espaço entre as informações e o botão */
+    border: none;
+    background-color: #28a745; /* Um verde para "entrar" */
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.join-room-btn:hover {
+    background-color: #218838; /* Verde mais escuro no hover */
+}
