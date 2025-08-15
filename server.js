@@ -1,25 +1,19 @@
-// =========================================================================
-// 1. IMPORTAÇÕES E CONFIGURAÇÃO INICIAL
-// =========================================================================
 const express = require('express');
 const http = require('http');
 const { WebSocketServer } = require('ws');
-const { Pool } = require('pg'); // Importa o driver do PostgreSQL
+const { Pool } = require('pg'); 
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 const PORT = 3000;
 
-// =========================================================================
-// 2. CONFIGURAÇÃO DA CONEXÃO COM O BANCO DE DADOS POSTGRESQL
-// =========================================================================
-// O Pool gerencia múltiplas conexões com o banco de forma eficiente.
+
 const pool = new Pool({
-    user: 'postgres', // Seu usuário do PostgreSQL
+    user: 'postgres', 
     host: 'localhost',
-    database: 'meuchat', // O nome do banco de dados que criamos
-    password: '123456789', // A senha que você definiu para o usuário postgres
+    database: 'meuchat', 
+    password: '123456789', 
     port: 5432,
 });
 
@@ -33,21 +27,21 @@ pool.query('SELECT NOW()', (err, res) => {
 });
 
 
-// =========================================================================
-// 3. SERVINDO OS ARQUIVOS ESTÁTICOS (HTML, CSS, JS do Cliente)
-// =========================================================================
+
+//SERVINDO OS ARQUIVOS ESTÁTICOS (HTML, CSS, JS do Cliente)
+
 app.use(express.static('public'));
 
 
-// =========================================================================
-// 4. LÓGICA DO SERVIDOR DE CHAT (com integração ao Banco de Dados)
-// =========================================================================
+
+// LÓGICA DO SERVIDOR DE CHAT (com integração ao Banco de Dados)
+
 
 // Função para buscar as salas no DB e enviar para todos os clientes
 async function broadcastRoomList() {
     try {
         const result = await pool.query('SELECT * FROM Salas ORDER BY nome');
-        const rooms = result.rows; // As linhas retornadas pela query
+        const rooms = result.rows; 
 
         const message = JSON.stringify({
             type: 'listaDeSalasAtualizada',
@@ -62,25 +56,22 @@ async function broadcastRoomList() {
     }
 }
 
-// Executado quando um novo cliente se conecta via WebSocket
 wss.on('connection', (socket) => {
     console.log('🔌 Novo cliente conectado!');
 
-    // Assim que o cliente se conecta, enviamos a ele a lista de salas atual
     broadcastRoomList();
 
-    // Executado quando uma mensagem chega de um cliente
     socket.on('message', async (message) => {
         try {
-            console.log('✅ SERVIDOR: Mensagem crua recebida:', message.toString());
+            console.log('SERVIDOR: Mensagem crua recebida:', message.toString());
             
             const data = JSON.parse(message.toString());
-            console.log(`✅ SERVIDOR: Mensagem parseada. Tipo: "${data.type}"`); // <-- Log de verificação
+            console.log(`SERVIDOR: Mensagem parseada. Tipo: "${data.type}"`); // <-- Log de verificação
 
             switch (data.type) {
                 case 'criarSala':
-                    console.log(`➡️ SERVIDOR: Entrou no case 'criarSala'`);
-                    // ... (lógica de criar sala que já está funcionando)
+                    console.log(`SERVIDOR: Entrou no case 'criarSala'`);
+                
                     const query = 'INSERT INTO Salas (nome) VALUES ($1) RETURNING *';
                     const result = await pool.query(query, [data.nome]);
                     await broadcastRoomList();
@@ -88,7 +79,7 @@ wss.on('connection', (socket) => {
                     break;
 
                 case 'entrarNaSala':
-                    console.log(`➡️ SERVIDOR: Entrou no case 'entrarNaSala'`); // <-- Log de verificação
+                    console.log(`SERVIDOR: Entrou no case 'entrarNaSala'`); // <-- Log de verificação
                     socket.room = data.roomName;
                     socket.nickname = data.nickname;
                     
@@ -105,7 +96,7 @@ wss.on('connection', (socket) => {
                     break;
 
                 case 'enviarMensagem':
-                    console.log(`➡️ SERVIDOR: Entrou no case 'enviarMensagem'`); // <-- Log de verificação
+                    console.log(` SERVIDOR: Entrou no case 'enviarMensagem'`); // <-- Log de verificação
                     console.log(`[${data.nickname}] na sala [${data.roomName}] enviou: ${data.content}`);
                     
                     const roomResultMsg = await pool.query('SELECT id FROM Salas WHERE nome = $1', [data.roomName]);
@@ -127,15 +118,15 @@ wss.on('connection', (socket) => {
                     break;
 
                 default:
-                    console.log(`⚠️ SERVIDOR: Tipo de mensagem desconhecido ou não tratado: "${data.type}"`);
+                    console.log(`SERVIDOR: Tipo de mensagem desconhecido ou não tratado: "${data.type}"`);
             }
         } catch (err) {
-            console.error('❌ ERRO FATAL no processamento da mensagem:', err);
+            console.error('ERRO FATAL no processamento da mensagem:', err);
         }
     });
 
     socket.on('close', () => {
-        console.log('🔌 Cliente desconectado.');
+        console.log('Cliente desconectado.');
     });
 });
 
