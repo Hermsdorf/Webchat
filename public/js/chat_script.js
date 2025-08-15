@@ -24,18 +24,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // === LÓGICA DE ENVIO DE MENSAGENS PARA O SERVIDOR ===
 
     // Função para enviar mensagem, usada pelo botão e pela tecla Enter
-    function sendMessage() {
-        const messageText = chatIn.value.trim();
-        if (messageText) {
-            socket.send(JSON.stringify({
-                type: 'enviarMensagem',
-                nickname: nickname,
-                roomName: roomName,
-                content: messageText
-            }));
-            chatIn.value = ""; // Limpa o campo de input imediatamente
-        }
+    // Função para enviar mensagem, usada pelo botão e pela tecla Enter
+function sendMessage() {
+    const messageText = chatIn.value.trim();
+    if (messageText) {
+        // 1. Criamos o objeto da mensagem e o guardamos em uma constante
+        const messagePayload = {
+            type: 'enviarMensagem',
+            nickname: nickname,
+            roomName: roomName,
+            content: messageText
+        };
+
+        // 2. Usamos o console.log para depurar (verificar o que estamos enviando)
+        // Esta é a linha de teste que queríamos adicionar
+        console.log("CLIENTE: Enviando para o servidor:", messagePayload);
+
+        // 3. Enviamos o objeto que acabamos de criar para o servidor
+        socket.send(JSON.stringify(messagePayload));
+        
+        // 4. Limpamos o campo de input
+        chatIn.value = "";
     }
+}
 
     sendBtn.addEventListener("click", sendMessage);
     chatIn.addEventListener('keydown', function(event) {

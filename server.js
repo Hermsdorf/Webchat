@@ -64,48 +64,83 @@ async function broadcastRoomList() {
 
 // Executado quando um novo cliente se conecta via WebSocket
 wss.on('connection', (socket) => {
-    console.log('Novo cliente conectado!');
+    console.log('🔌 Novo cliente conectado!');
 
-    // Assim que o cliente se conecta, enviamos a ele a lista de salas atual do banco de dados
+    // Assim que o cliente se conecta, enviamos a ele a lista de salas atual
     broadcastRoomList();
 
     // Executado quando uma mensagem chega de um cliente
     socket.on('message', async (message) => {
-        const data = JSON.parse(message.toString());
-
-        switch (data.type) {
-            case 'criarSala':
-                console.log(`Pedido para criar a sala: ${data.nome}`);
-                
-                try {
-                    // Insere a nova sala no banco de dados
-                    // Usamos $1 para prevenir SQL Injection
-                    const query = 'INSERT INTO Salas (nome) VALUES ($1)';
-                    await pool.query(query, [data.nome]);
-
-                    // Após inserir, avisa a TODOS os clientes sobre a nova lista de salas
-                    await broadcastRoomList();
-
-                } catch (err) {
-                    console.error('Erro ao inserir nova sala:', err);
-                    // Opcional: Enviar uma mensagem de erro de volta para o cliente
-                    socket.send(JSON.stringify({ type: 'erro', mensagem: 'Nome da sala já existe ou é inválido.' }));
-                }
-                break;
+        try {
+            console.log('✅ SERVIDOR: Mensagem crua recebida:', message.toString());
             
-            // Outros casos como 'entrarNaSala', 'enviarMensagem' virão aqui
+            const data = JSON.parse(message.toString());
+            console.log(`✅ SERVIDOR: Mensagem parseada. Tipo: "${data.type}"`); // <-- Log de verificação
+
+            switch (data.type) {
+                case 'criarSala':
+                    console.log(`➡️ SERVIDOR: Entrou no case 'criarSala'`);
+                    // ... (lógica de criar sala que já está funcionando)
+                    const query = 'INSERT INTO Salas (nome) VALUES ($1) RETURNING *';
+                    const result = await pool.query(query, [data.nome]);
+                    await broadcastRoomList();
+                    socket.send(JSON.stringify({ type: 'salaCriadaComSucesso', sala: result.rows[0] }));
+                    break;
+
+                case 'entrarNaSala':
+                    console.log(`➡️ SERVIDOR: Entrou no case 'entrarNaSala'`); // <-- Log de verificação
+                    socket.room = data.roomName;
+                    socket.nickname = data.nickname;
+                    
+                    console.log(`[${socket.nickname}] entrou na sala [${socket.room}]`);
+
+                    const roomResult = await pool.query('SELECT id FROM Salas WHERE nome = $1', [socket.room]);
+                    if (roomResult.rows.length > 0) {
+                        const roomId = roomResult.rows[0].id;
+                        const historyQuery = 'SELECT * FROM Mensagens WHERE id_sala = $1 ORDER BY timestamp ASC LIMIT 50';
+                        const historyResult = await pool.query(historyQuery, [roomId]);
+                        
+                        socket.send(JSON.stringify({ type: 'historicoChat', messages: historyResult.rows }));
+                    }
+                    break;
+
+                case 'enviarMensagem':
+                    console.log(`➡️ SERVIDOR: Entrou no case 'enviarMensagem'`); // <-- Log de verificação
+                    console.log(`[${data.nickname}] na sala [${data.roomName}] enviou: ${data.content}`);
+                    
+                    const roomResultMsg = await pool.query('SELECT id FROM Salas WHERE nome = $1', [data.roomName]);
+                    if (roomResultMsg.rows.length > 0) {
+                        const roomId = roomResultMsg.rows[0].id;
+                        const insertQuery = 'INSERT INTO Mensagens (id_sala, nickname_usuario, conteudo) VALUES ($1, $2, $3)';
+                        await pool.query(insertQuery, [roomId, data.nickname, data.content]);
+                    }
+
+                    wss.clients.forEach(client => {
+                        if (client.readyState === socket.OPEN && client.room === data.roomName) {
+                            client.send(JSON.stringify({
+                                type: 'novaMensagem',
+                                nickname: data.nickname,
+                                content: data.content
+                            }));
+                        }
+                    });
+                    break;
+
+                default:
+                    console.log(`⚠️ SERVIDOR: Tipo de mensagem desconhecido ou não tratado: "${data.type}"`);
+            }
+        } catch (err) {
+            console.error('❌ ERRO FATAL no processamento da mensagem:', err);
         }
     });
 
     socket.on('close', () => {
-        console.log('Cliente desconectado.');
+        console.log('🔌 Cliente desconectado.');
     });
 });
 
 
-// =========================================================================
-// 5. INICIANDO O SERVIDOR
-// =========================================================================
+
 server.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
