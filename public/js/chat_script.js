@@ -1,13 +1,15 @@
 // =========================================================================
 // FUNÇÕES AUXILIARES DE CRIPTOGRAFIA
 // =========================================================================
-async function loadPrivateKey() {
+async function loadPrivateKey()
+{
     const jwkPrivateKey = JSON.parse(localStorage.getItem('privateKey'));
     if (!jwkPrivateKey) { throw new Error("Chave privada não encontrada!"); }
     return await window.crypto.subtle.importKey('jwk', jwkPrivateKey, { name: "RSA-OAEP", hash: "SHA-256" }, true, ['decrypt']);
 }
 
-function base64ToArrayBuffer(base64) {
+function base64ToArrayBuffer(base64)
+{
     const binaryString = window.atob(base64);
     const len = binaryString.length;
     const bytes = new Uint8Array(len);
@@ -15,7 +17,8 @@ function base64ToArrayBuffer(base64) {
     return bytes.buffer;
 }
 
-function arrayBufferToBase64(buffer) {
+function arrayBufferToBase64(buffer)
+{
     let binary = '';
     const bytes = new Uint8Array(buffer);
     const len = bytes.byteLength;
@@ -26,8 +29,9 @@ function arrayBufferToBase64(buffer) {
 // =========================================================================
 // SCRIPT PRINCIPAL DO CHAT
 // =========================================================================
-document.addEventListener('DOMContentLoaded', async () => {
-    
+document.addEventListener('DOMContentLoaded', async () =>
+{
+
     let roomCryptoKey = null; // Variável para guardar a chave da sala
 
     const chatIn = document.getElementById("chat_in");
@@ -39,7 +43,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const authToken = sessionStorage.getItem('authToken');
     const logoutBtn = document.getElementById('logout');
 
-    if (!nickname || !roomName || !authToken) {
+    if (!nickname || !roomName || !authToken)
+    {
         window.location.href = '/index.html';
         return;
     }
@@ -47,22 +52,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById("sidebar-title").textContent = `Bem-vindo, ${nickname}`;
     document.getElementById("boas-vindas").textContent = `Sala: ${roomName}`;
 
-    const socket = new WebSocket(`ws://${window.location.host}?token=${authToken}`);
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const socket = new WebSocket(`${protocol}://${window.location.host}?token=${authToken}`);
 
-    socket.onopen = function () {
+    socket.onopen = function ()
+    {
         console.log("Conectado! Entrando na sala...");
         socket.send(JSON.stringify({ type: 'entrarNaSala', nickname, roomName }));
     };
 
-    socket.onmessage = async function (event) {
+    socket.onmessage = async function (event)
+    {
         const data = JSON.parse(event.data);
-        switch (data.type) {
+        switch (data.type)
+        {
             case 'chaveDaSala':
-                try {
+                try
+                {
                     const privateKey = await loadPrivateKey();
                     const encryptedKeyBuffer = base64ToArrayBuffer(data.encryptedKey);
                     const decryptedRoomKeyBuffer = await window.crypto.subtle.decrypt({ name: "RSA-OAEP" }, privateKey, encryptedKeyBuffer);
-                    
+
                     roomCryptoKey = await window.crypto.subtle.importKey(
                         'raw',
                         decryptedRoomKeyBuffer,
@@ -70,36 +80,42 @@ document.addEventListener('DOMContentLoaded', async () => {
                         true,
                         ['encrypt', 'decrypt']
                     );
-                    
+
                     console.log("Chave da sala recebida e pronta para uso!");
-                } catch (err) {
+                } catch (err)
+                {
                     console.error("FALHA AO PROCESSAR A CHAVE DA SALA:", err);
                 }
                 break;
-            
+
             case 'novaMensagem':
                 if (!roomCryptoKey) return;
-                try {
+                try
+                {
                     const { iv, encryptedContent } = JSON.parse(data.content);
                     const ivBuffer = base64ToArrayBuffer(iv);
                     const encryptedBuffer = base64ToArrayBuffer(encryptedContent);
                     const decryptedBuffer = await window.crypto.subtle.decrypt({ name: 'AES-GCM', iv: ivBuffer }, roomCryptoKey, encryptedBuffer);
                     const decryptedMessage = new TextDecoder().decode(decryptedBuffer);
-                    
+
                     chatOut.value += `${data.nickname}: ${decryptedMessage}\n`;
                     chatOut.scrollTop = chatOut.scrollHeight;
-                } catch(err) {
+                } catch (err)
+                {
                     console.error("Falha ao decifrar mensagem:", err);
                     chatOut.value += `[Não foi possível decifrar a mensagem de ${data.nickname}]\n`;
                 }
                 break;
         }
     };
-    
-    async function sendMessage() {
+
+    async function sendMessage()
+    {
         const messageText = chatIn.value.trim();
-        if (messageText && roomCryptoKey) {
-            try {
+        if (messageText && roomCryptoKey)
+        {
+            try
+            {
                 const iv = window.crypto.getRandomValues(new Uint8Array(12));
                 const encodedMessage = new TextEncoder().encode(messageText);
                 const encryptedBuffer = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, roomCryptoKey, encodedMessage);
@@ -116,26 +132,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                     content: JSON.stringify(payload)
                 }));
                 chatIn.value = "";
-            } catch (err) {
+            } catch (err)
+            {
                 console.error("Erro ao criptografar a mensagem:", err);
             }
-        } else {
+        } else
+        {
             console.error("MENSAGEM NÃO ENVIADA! Chave da sala (roomCryptoKey) não existe?", !!roomCryptoKey);
             if (!roomCryptoKey) alert("Não é possível enviar a mensagem. A chave de criptografia da sala não está disponível.");
         }
     }
 
     sendBtn.addEventListener("click", sendMessage);
-    chatIn.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
+    chatIn.addEventListener('keydown', (event) =>
+    {
+        if (event.key === 'Enter' && !event.shiftKey)
+        {
             event.preventDefault();
             sendMessage();
         }
     });
 
     if (quitBtn) quitBtn.addEventListener("click", () => window.location.href = 'lobby.html');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', (event) => {
+    if (logoutBtn)
+    {
+        logoutBtn.addEventListener('click', (event) =>
+        {
             event.preventDefault();
             if (socket.readyState === WebSocket.OPEN) socket.close();
             sessionStorage.clear();

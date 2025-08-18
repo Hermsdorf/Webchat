@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () =>
         return;
     }
 
-    const socket = new WebSocket(`ws://${window.location.host}?token=${authToken}`);
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const socket = new WebSocket(`${protocol}://${window.location.host}?token=${authToken}`);
 
     // === ENVIO DE MENSAGENS PARA O SERVIDOR ===
     createRoomBtn.addEventListener("click", function (event)
