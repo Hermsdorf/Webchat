@@ -5,25 +5,67 @@ document.addEventListener('DOMContentLoaded', () =>
     const loginBtn = document.getElementById('login-btn');
     const registerBtn = document.getElementById('register-btn');
     const messageP = document.getElementById('auth-message');
+    
+    async function generateUserKeys()
+    {
+        // Gera um par de chaves RSA-OAEP, o padrão para criptografia segura
+        return await window.crypto.subtle.generateKey(
+            {
+                name: 'RSA-OAEP',
+                modulusLength: 2048,
+                publicExponent: new Uint8Array([1, 0, 1]),
+                hash: 'SHA-256',
+            },
+            true, // A chave pode ser exportada para salvarmos
+            ['encrypt', 'decrypt']
+        );
+    }
 
     registerBtn.addEventListener('click', async () =>
     {
         const login = loginInput.value;
         const senha = senhaInput.value;
-
-        const response = await fetch('/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ login, senha })
-        });
-
-        const data = await response.json();
-        messageP.textContent = data.message; // Exibe a mensagem do servidor
-        if (response.ok)
+        if (!login || !senha)
         {
-            messageP.style.color = 'green';
-        } else
+            messageP.textContent = "Login e senha são obrigatórios.";
+            messageP.style.color = 'red';
+            return;
+        }
+
+        try
         {
+            messageP.textContent = "Gerando chaves de segurança...";
+            messageP.style.color = 'blue';
+
+            const keyPair = await generateUserKeys();
+            const publicKeyJwk = await window.crypto.subtle.exportKey('jwk', keyPair.publicKey);
+            const privateKeyJwk = await window.crypto.subtle.exportKey('jwk', keyPair.privateKey);
+            localStorage.setItem('privateKey', JSON.stringify(privateKeyJwk));
+            messageP.textContent = "Enviando para o servidor...";
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    login,
+                    senha,
+                    publicKey: JSON.stringify(publicKeyJwk)
+                })
+            });
+
+            const data = await response.json();
+            messageP.textContent = data.message;
+            if (response.ok)
+            {
+                messageP.style.color = 'green';
+            } else
+            {
+                messageP.style.color = 'red';
+                localStorage.removeItem('privateKey'); // Remove a chave se o cadastro falhar
+            }
+        } catch (err)
+        {
+            console.error("Erro no processo de cadastro:", err);
+            messageP.textContent = "Ocorreu um erro inesperado.";
             messageP.style.color = 'red';
         }
     });
@@ -40,23 +82,16 @@ document.addEventListener('DOMContentLoaded', () =>
         });
 
         const data = await response.json();
-
         if (response.ok)
         {
-            // Login bem-sucedido!
             messageP.textContent = data.message;
             messageP.style.color = 'green';
-
-            sessionStorage.setItem('login', login);
             sessionStorage.setItem('nickname', data.nickname);
-            sessionStorage.setItem('authToken', data.token); 
-
-            
+            sessionStorage.setItem('authToken', data.token);
             setTimeout(() =>
             {
                 window.location.href = '/lobby.html';
             }, 1000);
-
         } else
         {
             messageP.textContent = data.message;

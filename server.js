@@ -5,7 +5,7 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const url = require('url');
-
+const crypto = require('crypto');
 const app = express();
 app.use(express.json());
 const server = http.createServer(app);
@@ -41,7 +41,7 @@ app.use(express.static('public'));
 
 app.post('/register', async (req, res) =>
 {
-    const { login, senha } = req.body;
+    const { login, senha, publicKey } = req.body;
 
     if (!login || !senha)
     {
@@ -56,11 +56,11 @@ app.post('/register', async (req, res) =>
 
         // Insere o novo usuário no banco de dados com a senha criptografada
         const newUser = await pool.query(
-            'INSERT INTO Usuarios (username, pswrd, nick) VALUES ($1, $2, $1) RETURNING id, username, nick',
-            [login, senhaHash]
+            'INSERT INTO Usuarios (username, pswrd, nick, public_key) VALUES ($1, $2, $1, $3) RETURNING id, username, nick',
+            [login, senhaHash, publicKey] // Adiciona a chave pública
         );
 
-        res.status(201).json({ message: 'Usuário criado com sucesso!', user: newUser.rows[0] });
+        res.status(201).json({ message: 'Usuário criado com sucesso! Clique em "Entrar" para continuar.', user: newUser.rows[0] });
 
     } catch (err)
     {
@@ -190,18 +190,63 @@ wss.on('connection', (socket, req) =>
                 case 'criarSala':
                     console.log(`SERVIDOR: Entrou no case 'criarSala'`);
 
-                    const query = 'INSERT INTO Salas (nome) VALUES ($1) RETURNING *';
-                    const result = await pool.query(query, [data.nome]);
+                    const roomKey = crypto.randomBytes(32).toString('hex');
+                    const query = 'INSERT INTO Salas (nome, room_key) VALUES ($1, $2) RETURNING *';
+                    const result = await pool.query(query, [data.nome, roomKey]);
                     await broadcastRoomList();
                     socket.send(JSON.stringify({ type: 'salaCriadaComSucesso', sala: result.rows[0] }));
                     break;
 
-                case 'entrarNaSala':
-                    console.log(`SERVIDOR: Entrou no case 'entrarNaSala'`); // <-- Log de verificação
-                    socket.room = data.roomName;
-                    socket.nickname = data.nickname;
-                    console.log(`[${socket.nickname}] entrou na sala [${socket.room}]`);
-                    break;
+               case 'entrarNaSala':
+    console.log(`➡️ SERVIDOR: Entrou no case 'entrarNaSala'`);
+    socket.room = data.roomName;
+    socket.nickname = data.nickname;
+    console.log(`[${socket.nickname}] entrou na sala [${socket.room}]`);
+
+    try {
+        const roomResult = await pool.query('SELECT room_key FROM Salas WHERE nome = $1', [socket.room]);
+        const userResult = await pool.query('SELECT public_key FROM Usuarios WHERE id = $1', [socket.userId]);
+
+        if (roomResult.rows.length > 0 && userResult.rows.length > 0) {
+            const roomKey = roomResult.rows[0].room_key;
+            const userPublicKeyJwkString = userResult.rows[0].public_key;
+
+            // --- DEPURACAO ADICIONAL ---
+            console.log("Servidor: Chave pública lida do banco (formato string):", userPublicKeyJwkString);
+            if (!userPublicKeyJwkString) {
+                throw new Error("Chave pública está nula no banco de dados para este usuário.");
+            }
+            // --- FIM DA DEPURACAO ---
+
+            // Converte a chave do formato JWK (string) para o formato que o Node.js entende
+            const userPublicKey = crypto.createPublicKey({
+                key: JSON.parse(userPublicKeyJwkString),
+                format: 'jwk'
+            });
+
+            const encryptedRoomKey = crypto.publicEncrypt(
+                {
+                    key: userPublicKey,
+                    padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+                    oaepHash: 'sha256',
+                },
+                Buffer.from(roomKey, 'hex')
+            );
+            
+            console.log("✅ Servidor: Chave da sala criptografada com sucesso. Enviando ao cliente.");
+            
+            socket.send(JSON.stringify({
+                type: 'chaveDaSala',
+                encryptedKey: encryptedRoomKey.toString('base64')
+            }));
+        } else {
+             console.error("❌ Servidor: Não foi possível encontrar a sala ou o usuário no banco de dados.");
+        }
+    } catch (err) {
+        // Este log é crucial. Ele nos dirá se o erro é no JSON.parse ou no createPublicKey
+        console.error('❌ ERRO AO PROCESSAR E ENTREGAR CHAVE DA SALA:', err);
+    }
+    break;
 
                 case 'enviarMensagem':
                     console.log(` SERVIDOR: Entrou no case 'enviarMensagem'`); // <-- Log de verificação
