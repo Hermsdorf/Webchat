@@ -1,114 +1,83 @@
-/* ===== ESTILOS GLOBAIS E DE RESET ===== */
 body, html {
     margin: 0;
     padding: 0;
     height: 100%;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f0f2f5; /* Um cinza muito claro, comum em telas de login */
+    background-color: #f0f2f5; 
     color: #333;
 }
 
-/* ===== LAYOUT PRINCIPAL ===== */
-/* Usamos Flexbox para centralizar verticalmente e horizontalmente
-  o nosso container principal na tela inteira.
-*/
 body {
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* ===== ESTILIZAÇÃO DO CONTAINER/CARTÃO ===== */
 .home-container {
     background-color: #ffffff;
     padding: 40px;
-    border-radius: 8px; /* Cantos levemente arredondados */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sombra sutil para "elevar" o cartão */
-    text-align: center; /* Centraliza todo o texto e elementos inline dentro do cartão */
+    border-radius: 8px; 
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     max-width: 450px;
-    width: 90%; /* Garante que não fique colado nas bordas em telas pequenas */
+    width: 90%; 
+    text-align: center;
 }
 
-/* ===== TIPOGRAFIA ===== */
 #titulo-principal {
-    margin-top: 0; /* Remove a margem de cima padrão do h1 */
-    margin-bottom: 24px; /* Aumenta o espaço entre o título e o parágrafo */
+    margin-top: 0; 
+    margin-bottom: 24px; 
     color: #1c1e21;
-    font-size: 28px; /* Um pouco maior para dar mais destaque */
+    font-size: 28px; 
 }
 
 .home-container p {
-    color: #606770; /* Um cinza mais suave para o texto de instrução */
-    margin-bottom: 24px; /* Mais espaço antes do formulário */
+    color: #606770; 
+    margin-bottom: 24px;
     line-height: 1.5;
 }
 
-/* ===== ELEMENTOS DO FORMULÁRIO ===== */
 
 .input-wrapper {
-    display: flex;
-    align-items: center;
-    /* O "pino" para o nosso balão de emoji */
+    display: block;
+    text-align: left;
     position: relative; 
     margin-bottom: 16px;
 }
 
-#emoji-btn {
-    /* Define a imagem de fundo */
-    background-image: url('../assets/emoji-icon.png'); /* <<< VERIFIQUE SE ESTE CAMINHO ESTÁ CORRETO! */
-    
-    /* Configurações da imagem */
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
 
-    /* Define o tamanho do botão */
-    width: 28px;
-    height: 28px;
-
-    /* Remove estilos padrão do botão */
-    border: none;
-    background-color: transparent;
-    padding: 0;
-    cursor: pointer;
-
-    /* Espaçamento */
-    margin-right: 10px; 
-}
-
-#emoji-btn:hover {
-    opacity: 0.8;
-}
-
-#nome {
+#login {
     flex-grow: 1; 
     padding: 12px;
     border: 1px solid #dddfe2;
     border-radius: 6px;
     font-size: 16px;
     box-sizing: border-box;
-    margin-bottom: 0;
+    margin-bottom: 10px;
+    margin-top: 10px;
 }
 
-#nome:focus {
+#senha {
+    flex-grow: 1; 
+    padding: 12px;
+    border: 1px solid #dddfe2;
+    border-radius: 6px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+#login:focus {
     border-color: #007bff;
     outline: none;
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-/* Posicionamento do balão de emojis */
-emoji-picker {
-    /* O "elástico", agora preso ao pino do .input-wrapper */
-    position: absolute;
-    left: 0;
-    /* top: 100% o coloca logo abaixo do input */
-    top: 100%; 
-    margin-top: 5px; /* Um pequeno respiro */
-    z-index: 10; /* Garante que ele fique sobre outros elementos */
-    display: none; /* Começa escondido, como deveria */
+#senha:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-#start-chat {
+button {
     width: 100%;
     padding: 12px;
     border: none;
@@ -119,8 +88,9 @@ emoji-picker {
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    margin: 5px;
 }
 
-#start-chat:hover {
+button:hover {
     background-color: #0056b3;
 }

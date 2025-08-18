@@ -1,49 +1,66 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () =>
+{
+    const loginInput = document.getElementById('login');
+    const senhaInput = document.getElementById('senha');
+    const loginBtn = document.getElementById('login-btn');
+    const registerBtn = document.getElementById('register-btn');
+    const messageP = document.getElementById('auth-message');
 
-    const s_button = document.getElementById("start-chat");
-    const nome_input = document.getElementById("nome");
-    const emojiBtn = document.getElementById('emoji-btn');
-    const emojiPicker = document.querySelector('emoji-picker');
-    
-    // A lógica do seletor de emojis permanece 100% no cliente, está perfeita.
-    emojiBtn.addEventListener('click', () => {
-        const isHidden = emojiPicker.style.display === 'none' || emojiPicker.style.display === '';
-        emojiPicker.style.display = isHidden ? 'block' : 'none';
-    });
+    registerBtn.addEventListener('click', async () =>
+    {
+        const login = loginInput.value;
+        const senha = senhaInput.value;
 
-    emojiPicker.addEventListener('emoji-click', event => {
-        nome_input.value += event.detail.unicode;
-    });
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ login, senha })
+        });
 
-    document.addEventListener('click', (event) => {
-        const isClickInsidePicker = emojiPicker.contains(event.target);
-        const isClickOnButton = emojiBtn.contains(event.target);
-        if (!isClickInsidePicker && !isClickOnButton) {
-            emojiPicker.style.display = 'none';
+        const data = await response.json();
+        messageP.textContent = data.message; // Exibe a mensagem do servidor
+        if (response.ok)
+        {
+            messageP.style.color = 'green';
+        } else
+        {
+            messageP.style.color = 'red';
         }
     });
 
-    // Função para iniciar o chat, chamada pelo botão ou pela tecla Enter
-    function iniciarChat() {
-        const nome = nome_input.value;
-        if (nome.trim() === "") {
-            alert("Por favor, digite seu nome para iniciar o chat.");
-            return;
-        }
-        // Salva no sessionStorage para a próxima página usar
-        sessionStorage.setItem('nickname', nome);
-        // Redireciona para o lobby
-        window.location.href = '/lobby.html';
-    }
+    loginBtn.addEventListener('click', async () =>
+    {
+        const login = loginInput.value;
+        const senha = senhaInput.value;
 
-    // Listener para o botão de iniciar
-    s_button.addEventListener("click", iniciarChat);
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ login, senha })
+        });
 
-    // Listener para a tecla Enter no input
-    nome_input.addEventListener("keydown", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault(); // Impede o comportamento padrão do Enter
-            iniciarChat();
+        const data = await response.json();
+
+        if (response.ok)
+        {
+            // Login bem-sucedido!
+            messageP.textContent = data.message;
+            messageP.style.color = 'green';
+
+            sessionStorage.setItem('login', login);
+            sessionStorage.setItem('nickname', data.nickname);
+            sessionStorage.setItem('authToken', data.token); 
+
+            
+            setTimeout(() =>
+            {
+                window.location.href = '/lobby.html';
+            }, 1000);
+
+        } else
+        {
+            messageP.textContent = data.message;
+            messageP.style.color = 'red';
         }
     });
 });
