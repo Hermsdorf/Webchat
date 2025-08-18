@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () =>
 {
-    // === SELEÇÃO DE ELEMENTOS ===
     const createRoomBtn = document.getElementById("create-room");
     const roomNameInput = document.getElementById("room-name");
     const roomList = document.getElementById("rooms-list");
@@ -62,8 +61,14 @@ document.addEventListener('DOMContentLoaded', () =>
                 window.location.href = '/chat.html';
                 break;
             case 'nicknameAtualizado':
-                sessionStorage.setItem('nickname', data.novoNickname);
-                document.getElementById("nickname-display").textContent = data.novoNickname;
+                console.log(`Recebida atualização de Nick: ${data.antigoNickname} agora é ${data.novoNickname}`);
+                const currentUserId = jwt_decode(sessionStorage.getItem('authToken')).id; 
+                if (data.userId === currentUserId)
+                {
+                    document.getElementById("nickname-display").textContent = data.novoNickname;
+                    document.getElementById("sidebar-title").textContent = `Bem-vindo, ${data.novoNickname}`;
+                    sessionStorage.setItem('nickname', data.novoNickname);
+                }
                 break;
         }
     };
@@ -71,8 +76,8 @@ document.addEventListener('DOMContentLoaded', () =>
     // === FUNÇÃO PARA RENDERIZAR A LISTA DE SALAS NA TELA ===
     function renderRoomList(salas)
     {
-        roomList.innerHTML = ''; // Limpa a lista antiga
-        roomCountSpan.textContent = salas.length; // Atualiza o contador
+        roomList.innerHTML = ''; 
+        roomCountSpan.textContent = salas.length; 
 
         if (salas.length === 0)
         {
@@ -120,17 +125,12 @@ document.addEventListener('DOMContentLoaded', () =>
     {
         logoutBtn.addEventListener('click', (event) =>
         {
-            //impede que o link navegue para a página imediatamente
             event.preventDefault();
-
-            //apaga os dados de autenticação e identidade do navegador
             sessionStorage.removeItem('authToken');
             sessionStorage.removeItem('nickname');
             sessionStorage.removeItem('nomeSala');
 
             console.log('Sessão encerrada. Redirecionando para a home.');
-
-            //redireciona para a página inicial
             window.location.href = '/index.html';
         });
     }

@@ -197,56 +197,61 @@ wss.on('connection', (socket, req) =>
                     socket.send(JSON.stringify({ type: 'salaCriadaComSucesso', sala: result.rows[0] }));
                     break;
 
-               case 'entrarNaSala':
-    console.log(`➡️ SERVIDOR: Entrou no case 'entrarNaSala'`);
-    socket.room = data.roomName;
-    socket.nickname = data.nickname;
-    console.log(`[${socket.nickname}] entrou na sala [${socket.room}]`);
+                case 'entrarNaSala':
+                    console.log(`➡️ SERVIDOR: Entrou no case 'entrarNaSala'`);
+                    socket.room = data.roomName;
+                    socket.nickname = data.nickname;
+                    console.log(`[${socket.nickname}] entrou na sala [${socket.room}]`);
 
-    try {
-        const roomResult = await pool.query('SELECT room_key FROM Salas WHERE nome = $1', [socket.room]);
-        const userResult = await pool.query('SELECT public_key FROM Usuarios WHERE id = $1', [socket.userId]);
+                    try
+                    {
+                        const roomResult = await pool.query('SELECT room_key FROM Salas WHERE nome = $1', [socket.room]);
+                        const userResult = await pool.query('SELECT public_key FROM Usuarios WHERE id = $1', [socket.userId]);
 
-        if (roomResult.rows.length > 0 && userResult.rows.length > 0) {
-            const roomKey = roomResult.rows[0].room_key;
-            const userPublicKeyJwkString = userResult.rows[0].public_key;
+                        if (roomResult.rows.length > 0 && userResult.rows.length > 0)
+                        {
+                            const roomKey = roomResult.rows[0].room_key;
+                            const userPublicKeyJwkString = userResult.rows[0].public_key;
 
-            // --- DEPURACAO ADICIONAL ---
-            console.log("Servidor: Chave pública lida do banco (formato string):", userPublicKeyJwkString);
-            if (!userPublicKeyJwkString) {
-                throw new Error("Chave pública está nula no banco de dados para este usuário.");
-            }
-            // --- FIM DA DEPURACAO ---
+                            // --- DEPURACAO ADICIONAL ---
+                            console.log("Servidor: Chave pública lida do banco (formato string):", userPublicKeyJwkString);
+                            if (!userPublicKeyJwkString)
+                            {
+                                throw new Error("Chave pública está nula no banco de dados para este usuário.");
+                            }
+                            // --- FIM DA DEPURACAO ---
 
-            // Converte a chave do formato JWK (string) para o formato que o Node.js entende
-            const userPublicKey = crypto.createPublicKey({
-                key: JSON.parse(userPublicKeyJwkString),
-                format: 'jwk'
-            });
+                            // Converte a chave do formato JWK (string) para o formato que o Node.js entende
+                            const userPublicKey = crypto.createPublicKey({
+                                key: JSON.parse(userPublicKeyJwkString),
+                                format: 'jwk'
+                            });
 
-            const encryptedRoomKey = crypto.publicEncrypt(
-                {
-                    key: userPublicKey,
-                    padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-                    oaepHash: 'sha256',
-                },
-                Buffer.from(roomKey, 'hex')
-            );
-            
-            console.log("✅ Servidor: Chave da sala criptografada com sucesso. Enviando ao cliente.");
-            
-            socket.send(JSON.stringify({
-                type: 'chaveDaSala',
-                encryptedKey: encryptedRoomKey.toString('base64')
-            }));
-        } else {
-             console.error("❌ Servidor: Não foi possível encontrar a sala ou o usuário no banco de dados.");
-        }
-    } catch (err) {
-        // Este log é crucial. Ele nos dirá se o erro é no JSON.parse ou no createPublicKey
-        console.error('❌ ERRO AO PROCESSAR E ENTREGAR CHAVE DA SALA:', err);
-    }
-    break;
+                            const encryptedRoomKey = crypto.publicEncrypt(
+                                {
+                                    key: userPublicKey,
+                                    padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+                                    oaepHash: 'sha256',
+                                },
+                                Buffer.from(roomKey, 'hex')
+                            );
+
+                            console.log("✅ Servidor: Chave da sala criptografada com sucesso. Enviando ao cliente.");
+
+                            socket.send(JSON.stringify({
+                                type: 'chaveDaSala',
+                                encryptedKey: encryptedRoomKey.toString('base64')
+                            }));
+                        } else
+                        {
+                            console.error("❌ Servidor: Não foi possível encontrar a sala ou o usuário no banco de dados.");
+                        }
+                    } catch (err)
+                    {
+                        // Este log é crucial. Ele nos dirá se o erro é no JSON.parse ou no createPublicKey
+                        console.error('❌ ERRO AO PROCESSAR E ENTREGAR CHAVE DA SALA:', err);
+                    }
+                    break;
 
                 case 'enviarMensagem':
                     console.log(` SERVIDOR: Entrou no case 'enviarMensagem'`); // <-- Log de verificação
@@ -266,19 +271,25 @@ wss.on('connection', (socket, req) =>
                     break;
 
                 case 'atualizarNickname':
-                    console.log(`SERVIDOR: Entrou no case 'atualizarNickname'`);
-                    const antigoNick = socket.nickname;
-                    await pool.query('UPDATE usuarios SET nick = $1 WHERE id = $2', [novoNick, socket.userId]);
-                    socket.nickname = novoNick;
+                    try
+                    {
+                        console.log(`➡️ SERVIDOR: Entrou no case 'atualizarNickname'`);
+                        const antigoNick = socket.nickname; 
+                        const novoNick = data.novoNickname;
+                        await pool.query('UPDATE usuarios SET nick = $1 WHERE id = $2', [novoNick, socket.userId]);
+                        socket.nickname = novoNick;
+                        const updateMessage = JSON.stringify({
+                            type: 'nicknameAtualizado',
+                            userId: socket.userId,
+                            antigoNickname: antigoNick,
+                            novoNickname: novoNick
+                        });
+                        wss.clients.forEach(client => client.send(updateMessage));
 
-                    const updateMessage = JSON.stringify({
-                        type: 'nicknameAtualizado',
-                        userId: socket.userId,
-                        antigoNickname: antigoNick,
-                        novoNickname: novoNick
-                    });
-
-                    wss.clients.forEach(client => client.send(updateMessage));
+                    } catch (err)
+                    {
+                        console.error("Erro ao atualizar nickname:", err);
+                    }
                     break;
 
                 default:
