@@ -13,6 +13,10 @@
         <section class="user-info">
             <p id="user-nickname">Nickname: <span id="nickname-display"></span></p>
             <p id="user-id">ID: <span id="user-id-display"></span></p>
+            <form action="">
+                <input type="text" id="new-nickname" placeholder="Novo nickname">
+                <button type="submit" id="update-nickname">Atualizar</button>
+            </form>
         </section>
     </aside>
 
@@ -24,7 +28,7 @@
             </div>
             <h1 id="boas-vindas">WhatZap 2</h1>
             <div class="user-actions">
-                <a href="home.html" id="logout">Home</a>
+                <a href="index.html" id="logout">Sair</a>
             </div>
         </header>
 
@@ -55,6 +59,7 @@
         </footer>
 
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@4.0.0/build/jwt-decode.min.js"></script>
     <script src="js/lobby_script.js"></script>
 </body>
 

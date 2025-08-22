@@ -1,95 +1,169 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // === SELEÇÃO DE ELEMENTOS ===
+// =========================================================================
+// FUNÇÕES AUXILIARES DE CRIPTOGRAFIA
+// =========================================================================
+async function loadPrivateKey()
+{
+    const jwkPrivateKey = JSON.parse(localStorage.getItem('privateKey'));
+    if (!jwkPrivateKey) { throw new Error("Chave privada não encontrada!"); }
+    return await window.crypto.subtle.importKey('jwk', jwkPrivateKey, { name: "RSA-OAEP", hash: "SHA-256" }, true, ['decrypt']);
+}
+
+function base64ToArrayBuffer(base64)
+{
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); }
+    return bytes.buffer;
+}
+
+function arrayBufferToBase64(buffer)
+{
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) { binary += String.fromCharCode(bytes[i]); }
+    return window.btoa(binary);
+}
+
+// =========================================================================
+// SCRIPT PRINCIPAL DO CHAT
+// =========================================================================
+document.addEventListener('DOMContentLoaded', async () =>
+{
+
+    let roomCryptoKey = null; // Variável para guardar a chave da sala
+
     const chatIn = document.getElementById("chat_in");
     const chatOut = document.getElementById("chat_out");
     const sendBtn = document.getElementById("sendbt");
-    const quitBtn = document.getElementById("quit-chat"); // Assumindo que o ID seja este
-    
+    const quitBtn = document.getElementById("quit-chat");
     const nickname = sessionStorage.getItem('nickname');
     const roomName = sessionStorage.getItem('nomeSala');
+    const authToken = sessionStorage.getItem('authToken');
+    const logoutBtn = document.getElementById('logout');
 
-    // Validação: Se não tiver os dados necessários, volta para o início
-    if (!nickname || !roomName) {
-        window.location.href = '/home.html';
+    if (!nickname || !roomName || !authToken)
+    {
+        window.location.href = '/index.html';
         return;
     }
 
-    // Atualiza a interface com os dados da sessão
     document.getElementById("sidebar-title").textContent = `Bem-vindo, ${nickname}`;
     document.getElementById("boas-vindas").textContent = `Sala: ${roomName}`;
 
-    // === CONEXÃO WEBSOCKET ===
-    const socket = new WebSocket(`ws://${window.location.host}`);
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const socket = new WebSocket(`${protocol}://${window.location.host}?token=${authToken}`);
 
-    // === LÓGICA DE ENVIO DE MENSAGENS PARA O SERVIDOR ===
+    socket.onopen = function ()
+    {
+        console.log("Conectado! Entrando na sala...");
+        socket.send(JSON.stringify({ type: 'entrarNaSala', nickname, roomName }));
+    };
 
-    // Função para enviar mensagem, usada pelo botão e pela tecla Enter
-    // Função para enviar mensagem, usada pelo botão e pela tecla Enter
-function sendMessage() {
-    const messageText = chatIn.value.trim();
-    if (messageText) {
-        // 1. Criamos o objeto da mensagem e o guardamos em uma constante
-        const messagePayload = {
-            type: 'enviarMensagem',
-            nickname: nickname,
-            roomName: roomName,
-            content: messageText
-        };
+    socket.onmessage = async function (event)
+    {
+        const data = JSON.parse(event.data);
+        switch (data.type)
+        {
+            case 'chaveDaSala':
+                try
+                {
+                    const privateKey = await loadPrivateKey();
+                    const encryptedKeyBuffer = base64ToArrayBuffer(data.encryptedKey);
+                    const decryptedRoomKeyBuffer = await window.crypto.subtle.decrypt({ name: "RSA-OAEP" }, privateKey, encryptedKeyBuffer);
 
-        // 2. Usamos o console.log para depurar (verificar o que estamos enviando)
-        // Esta é a linha de teste que queríamos adicionar
-        console.log("CLIENTE: Enviando para o servidor:", messagePayload);
+                    roomCryptoKey = await window.crypto.subtle.importKey(
+                        'raw',
+                        decryptedRoomKeyBuffer,
+                        { name: 'AES-GCM', length: 256 },
+                        true,
+                        ['encrypt', 'decrypt']
+                    );
 
-        // 3. Enviamos o objeto que acabamos de criar para o servidor
-        socket.send(JSON.stringify(messagePayload));
-        
-        // 4. Limpamos o campo de input
-        chatIn.value = "";
+                    console.log("Chave da sala recebida e pronta para uso!");
+                } catch (err)
+                {
+                    console.error("FALHA AO PROCESSAR A CHAVE DA SALA:", err);
+                }
+                break;
+
+            case 'novaMensagem':
+                if (!roomCryptoKey) return;
+                try
+                {
+                    const { iv, encryptedContent } = JSON.parse(data.content);
+                    const ivBuffer = base64ToArrayBuffer(iv);
+                    const encryptedBuffer = base64ToArrayBuffer(encryptedContent);
+                    const decryptedBuffer = await window.crypto.subtle.decrypt({ name: 'AES-GCM', iv: ivBuffer }, roomCryptoKey, encryptedBuffer);
+                    const decryptedMessage = new TextDecoder().decode(decryptedBuffer);
+
+                    chatOut.value += `${data.nickname}: ${decryptedMessage}\n`;
+                    chatOut.scrollTop = chatOut.scrollHeight;
+                } catch (err)
+                {
+                    console.error("Falha ao decifrar mensagem:", err);
+                    chatOut.value += `[Não foi possível decifrar a mensagem de ${data.nickname}]\n`;
+                }
+                break;
+        }
+    };
+
+    async function sendMessage()
+    {
+        const messageText = chatIn.value.trim();
+        if (messageText && roomCryptoKey)
+        {
+            try
+            {
+                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                const encodedMessage = new TextEncoder().encode(messageText);
+                const encryptedBuffer = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, roomCryptoKey, encodedMessage);
+
+                const payload = {
+                    iv: arrayBufferToBase64(iv),
+                    encryptedContent: arrayBufferToBase64(encryptedBuffer)
+                };
+
+                socket.send(JSON.stringify({
+                    type: 'enviarMensagem',
+                    nickname: nickname,
+                    roomName: roomName,
+                    content: JSON.stringify(payload)
+                }));
+                chatIn.value = "";
+            } catch (err)
+            {
+                console.error("Erro ao criptografar a mensagem:", err);
+            }
+        } else
+        {
+            console.error("MENSAGEM NÃO ENVIADA! Chave da sala (roomCryptoKey) não existe?", !!roomCryptoKey);
+            if (!roomCryptoKey) alert("Não é possível enviar a mensagem. A chave de criptografia da sala não está disponível.");
+        }
     }
-}
 
     sendBtn.addEventListener("click", sendMessage);
-    chatIn.addEventListener('keydown', function(event) {
-        if (event.key === 'Enter' && !event.shiftKey) {
+    chatIn.addEventListener('keydown', (event) =>
+    {
+        if (event.key === 'Enter' && !event.shiftKey)
+        {
             event.preventDefault();
             sendMessage();
         }
     });
 
-    // === LÓGICA DE RECEBIMENTO DE MENSAGENS DO SERVIDOR ===
-    socket.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-
-        switch (data.type) {
-            // Caso receba uma mensagem nova para exibir
-            case 'novaMensagem':
-                chatOut.value += `${data.nickname}: ${data.content}\n`;
-                // Faz o scroll para a mensagem mais recente
-                chatOut.scrollTop = chatOut.scrollHeight; 
-                break;
-            
-            // Caso o servidor envie o histórico da sala ao entrar
-            case 'historicoChat':
-                chatOut.value = ''; // Limpa a área de chat
-                data.messages.forEach(msg => {
-                    chatOut.value += `${msg.nickname_usuario}: ${msg.conteudo}\n`;
-                });
-                chatOut.scrollTop = chatOut.scrollHeight;
-                break;
-        }
-    };
-    
-    // Opcional: Avisar ao servidor que você está entrando nesta sala
-    socket.onopen = function() {
-        socket.send(JSON.stringify({
-            type: 'entrarNaSala',
-            nickname: nickname,
-            roomName: roomName
-        }));
-    };
-
-    // A lógica de sair da sala permanece a mesma
-    quitBtn.addEventListener("click", function() {
-        window.location.href = 'lobby.html';
-    });
+    if (quitBtn) quitBtn.addEventListener("click", () => window.location.href = 'lobby.html');
+    if (logoutBtn)
+    {
+        logoutBtn.addEventListener('click', (event) =>
+        {
+            event.preventDefault();
+            if (socket.readyState === WebSocket.OPEN) socket.close();
+            sessionStorage.clear();
+            localStorage.removeItem('privateKey');
+            console.log('Sessão encerrada.');
+            window.location.href = '/index.html';
+        });
+    }
 });

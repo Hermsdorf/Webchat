@@ -1,0 +1,79 @@
+# Projeto WebChat 
+Este é um projeto de aplicação de chat em tempo real, construído com Node.js, WebSocket e PostgreSQL. A aplicação possui um sistema de autenticação seguro com senhas criptografadas e implementa uma camada de criptografia de ponta a ponta para as mensagens.
+
+## Tecnologias
+- Front-End: HTML5, CSS3, JavaScript (ES6+)
+- Back-End: Node.js
+- Framework do Servidor: Express.js
+- Comunicação em Tempo Real: WebSockets (via biblioteca ws)
+- Banco de Dados: PostgreSQL
+- Segurança:
+    - Hashing de Senhas com bcrypt
+    - Autenticação baseada em Token com jsonwebtoken (JWT)
+    - Criptografia de ponta a ponta com a Web Crypto API (RSA-OAEP & AES-GCM)
+- Gerenciamento de Processos: PM2
+
+# Descrição
+
+Como funciona o projeto aqui.
+
+
+# Instalação e Configuração
+
+## Pré-requisitos
+
+- Node.js
+- PostgreSQ
+- NPM
+    - express
+    - ws
+    - pg
+    - bcrypt
+    - jsonwebtoken
+    - dotenv
+
+## Instalando
+
+1. Clone o Repositório
+Clone os arquivos do projeto para a sua máquina.
+
+2. Instale as Dependências do Projeto
+Este comando irá ler o arquivo package.json e instalar todas as bibliotecas necessárias na pasta node_modules.
+
+```bash
+npm init -y
+npm install
+```
+
+3. Configure o Banco de Dados (PostgreSQL)
+
+- Crie as tabelas com os comando descritos em schema.sql
+- Lembre de alterar as credenciais no arquivo server.js
+
+
+
+# Executando
+Nodiretorio raiz simplesmente execute:
+```bash
+node server.js
+```
+ou se quiser use o PM2 para manter a aplicação rodando em segundo plano. Primeiro certifique de instalar PM2 globalmente:
+
+Bash
+
+```bash
+sudo npm install pm2 -g
+```
+
+Inicie a aplicação:
+
+```bash
+pm2 start server.js --name "chat-server"
+```
+
+### Comandos úteis do PM2:
+
+- pm2 list: Ver o status.
+- pm2 logs: Ver os logs.
+- pm2 restart chat-server: Reiniciar.
+- pm2 stop chat-server: Parar.

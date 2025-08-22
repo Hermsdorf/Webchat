@@ -10,24 +10,27 @@
 
 <body>
 
-<main class="home-container">
+    <main class="home-container">
+        <h1 id="titulo-principal">WhatZap 2</h1>
 
-    <h1 id="titulo-principal">WhatZap 2</h1>
-    <p>Para começar digite um apelido:</p>
+        <form id="auth-form">
+            <div class="input-group">
+                <label for="login">Login</label>
+                <input type="text" id="login" required>
+            </div>
+            <div class="input-group">
+                <label for="senha">Senha</label>
+                <input type="password" id="senha" required>
+            </div>
 
-    <div class="input-wrapper">
-        <button id="emoji-btn" type="button"></button>
-        <input type="text" id="nome" placeholder="Nickname" autocomplete="off">
-        
-        <emoji-picker class="light"></emoji-picker>
-    </div>
-
-    <button id="start-chat">Iniciar Chat</button>
-
-</main>
-
+            <div class="button-group">
+                <button type="button" id="login-btn">Entrar</button>
+                <button type="button" id="register-btn">Cadastrar</button>
+            </div>
+        </form>
+        <p id="auth-message"></p>
+    </main>
 </body>
-<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 <script src="js/home_script.js"></script>
 
 </html>
